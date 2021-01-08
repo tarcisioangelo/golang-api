@@ -1,6 +1,7 @@
 package testes
 
 import (
+	ModelUser "api/models"
 	ServiceAuth "api/services"
 	ServiceUser "api/services"
 	"api/util"
@@ -60,11 +61,17 @@ func Find(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(&user)
 }
 
-// Create cria um novo contato
-func Create(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
+// Update - atualiza
+func Update(w http.ResponseWriter, r *http.Request) {
+	body, _ := ioutil.ReadAll(r.Body)
 
-	json.NewEncoder(w).Encode(params)
+	var user ModelUser.User
+
+	json.Unmarshal(body, &user)
+
+	user.ID = 1
+
+	json.NewEncoder(w).Encode(user)
 }
 
 // Delete deleta um contato
