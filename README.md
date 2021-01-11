@@ -1,11 +1,11 @@
 # golang-api
 API Utilizando Golang e Banco de dados MySQL
 
-Vou adiicionar docker e scripts de banco para ajudar, como é um projeto de estudo estava utilizando um banco já existente
-
 ## Rodando o Projeto
-go run main.go
 
-## Tarefas
-[] - Script de banco
-[] - Adicionar docker
+1. docker-compose up -d
+2. Acesse localhost:7070
+3. rodar o script do banco que está dentro de docs
+ 
+
+
