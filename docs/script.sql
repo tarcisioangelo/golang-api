@@ -1,0 +1,12 @@
+
+CREATE SCHEMA IF NOT EXISTS `db_study` DEFAULT CHARACTER SET utf8 ;
+
+CREATE TABLE IF NOT EXISTS `db_study`.`tb_user` (
+  `id_user` INT(11) NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(70) NOT NULL,
+  `email` VARCHAR(70) NOT NULL,
+  `password` VARCHAR(32) NOT NULL,
+  `is_active` BIGINT(20) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id_user`))
+ENGINE = InnoDB
+DEFAULT CHARACTER SET = utf8;
