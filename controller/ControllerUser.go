@@ -1,8 +1,6 @@
 package testes
 
 import (
-	ModelUser "api/models"
-	ServiceAuth "api/services"
 	ServiceUser "api/services"
 	"api/util"
 	"io/ioutil"
@@ -11,8 +9,37 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/gorilla/context"
 	"github.com/gorilla/mux"
 )
+
+// Create - Criando usuário
+func Create(w http.ResponseWriter, r *http.Request) {
+
+	body, _ := ioutil.ReadAll(r.Body)
+
+	type NewUser struct {
+		Name     string `json:"name"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	var user NewUser
+
+	json.Unmarshal(body, &user)
+
+	// Salvando dados
+	err := ServiceUser.Create(user.Name, user.Email, user.Password)
+
+	// Caso retorne um erro
+	if err != nil {
+		w.Write(util.MessageInfo("message", err.Error()))
+		return
+	}
+
+	// Envia o token como retorno
+	w.Write(util.MessageInfo("message", "Cadastro realizado com sucesso"))
+}
 
 // Login - Fazendo login
 func Login(w http.ResponseWriter, r *http.Request) {
@@ -29,7 +56,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	json.Unmarshal(body, &login)
 
 	// Buscando dados de login
-	user, err := ServiceUser.Login(login.Email, login.Password)
+	token, err := ServiceUser.Login(login.Email, login.Password)
 
 	// Caso retorne um erro
 	if err != nil {
@@ -37,16 +64,15 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Criando token com id do usuário
-	token, _ := ServiceAuth.CreateToken(user.ID)
-
 	// Envia o token como retorno
 	w.Write(util.MessageInfo("token", token))
 }
 
 // List - Listando Usuários
 func List(w http.ResponseWriter, r *http.Request) {
+
 	users := ServiceUser.List(5)
+
 	json.NewEncoder(w).Encode(&users)
 }
 
@@ -54,29 +80,58 @@ func List(w http.ResponseWriter, r *http.Request) {
 func Find(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 
-	id, _ := strconv.Atoi(params["id"])
+	id, err := strconv.Atoi(params["id"])
 
-	user := ServiceUser.Find(id)
+	user, err := ServiceUser.Find(id)
+
+	if err != nil {
+		w.Write(util.MessageInfo("message", err.Error()))
+		return
+	}
 
 	json.NewEncoder(w).Encode(&user)
 }
 
-// Update - atualiza
+// Update - Atualizando usuário
 func Update(w http.ResponseWriter, r *http.Request) {
+
 	body, _ := ioutil.ReadAll(r.Body)
 
-	var user ModelUser.User
+	userID := context.Get(r, "userID").(int)
+
+	type UpdateUser struct {
+		Name     string `json:"name"`
+		Password string `json:"password"`
+	}
+
+	var user UpdateUser
 
 	json.Unmarshal(body, &user)
 
-	user.ID = 1
+	// Salvando dados
+	err := ServiceUser.Update(userID, user.Name, user.Password)
 
-	json.NewEncoder(w).Encode(user)
+	// Caso retorne um erro
+	if err != nil {
+		w.Write(util.MessageInfo("message", err.Error()))
+		return
+	}
+
+	// Envia o token como retorno
+	w.Write(util.MessageInfo("message", "Cadastro atualizado com sucesso"))
 }
 
 // Delete deleta um contato
 func Delete(w http.ResponseWriter, r *http.Request) {
-	params := mux.Vars(r)
+	userID := context.Get(r, "userID").(int)
 
-	json.NewEncoder(w).Encode(params)
+	// Excluindo usuário logado
+	err := ServiceUser.Delete(userID)
+
+	if err != nil {
+		w.Write(util.MessageInfo("message", err.Error()))
+		return
+	}
+
+	w.Write(util.MessageInfo("message", "Excluído com sucesso"))
 }

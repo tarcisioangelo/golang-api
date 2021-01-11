@@ -13,13 +13,12 @@ import (
 func CreateToken(userID uint) (string, error) {
 	var err error
 
-	//Creating Access Token
 	accessSecret := os.Getenv("ACCESS_SECRET")
 
 	atClaims := jwt.MapClaims{}
 	atClaims["authorized"] = true
-	atClaims["user_id"] = userID
-	atClaims["exp"] = time.Now().Add(time.Minute * 15).Unix()
+	atClaims["user"] = userID
+	atClaims["exp"] = time.Now().Add(time.Hour * 1).Unix()
 
 	at := jwt.NewWithClaims(jwt.SigningMethodHS256, atClaims)
 
@@ -33,36 +32,36 @@ func CreateToken(userID uint) (string, error) {
 }
 
 // TokenValid - Validação do Token JWT
-func TokenValid(r string) error {
-	token, err := verifyToken(r)
-
-	if err != nil {
-		return err
-	}
-
-	if _, ok := token.Claims.(jwt.Claims); !ok && !token.Valid {
-		return err
-	}
-
-	return nil
-}
-
-func verifyToken(r string) (*jwt.Token, error) {
+// Valida e retorna o ID do Usuário
+func TokenValid(r string) (int, error) {
 	tokenString := extractToken(r)
 
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	accessSecret := os.Getenv("ACCESS_SECRET")
+
+	type Claims struct {
+		User int `json:"user"`
+		jwt.StandardClaims
+	}
+
+	claims := &Claims{}
+
+	token, err := jwt.ParseWithClaims(tokenString, claims, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 
-		return []byte(os.Getenv("ACCESS_SECRET")), nil
+		return []byte(accessSecret), nil
 	})
 
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
-	return token, nil
+	if !token.Valid {
+		return 0, err
+	}
+
+	return claims.User, nil
 }
 
 func extractToken(r string) string {

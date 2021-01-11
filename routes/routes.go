@@ -9,11 +9,14 @@ import (
 
 // Init - inicializa as rotas
 func Init() *mux.Router {
-	router := mux.NewRouter()
+	router := mux.NewRouter().StrictSlash(true)
+	router.HandleFunc("/user", ControllerUser.Create).Methods("POST")
 	router.HandleFunc("/login", ControllerUser.Login).Methods("POST")
-	router.HandleFunc("/user", ControllerUser.List).Methods("GET")
-	router.HandleFunc("/user", ControllerUser.Update).Methods("PUT")
+
+	// Rotas Autenticadas
+	router.HandleFunc("/user", MiddlewareAuth.Auth(ControllerUser.Update)).Methods("PUT")
+	router.HandleFunc("/user", MiddlewareAuth.Auth(ControllerUser.List)).Methods("GET")
 	router.HandleFunc("/user/{id}", MiddlewareAuth.Auth(ControllerUser.Find)).Methods("GET")
-	router.HandleFunc("/user/{id}", ControllerUser.Delete).Methods("DELETE")
+	router.HandleFunc("/user", MiddlewareAuth.Auth(ControllerUser.Delete)).Methods("DELETE")
 	return router
 }
